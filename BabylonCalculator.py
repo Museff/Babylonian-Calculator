@@ -1,22 +1,25 @@
-import PySimpleGUI as sg 
-import math
+from PySimpleGUI import Text, Button, Window, Output, VerticalSeparator, Column
+from math import modf
 
-no: dict = {'size':(7,2), 'font':('Franklin Gothic Book', 24),'border_width':1, 'button_color':("black","#f9f9f9")}
-opr: dict = {'size':(7,2), 'font':('Franklin Gothic Book', 24),'border_width':1, 'button_color':("black","#d6d6d6")}
-eq: dict = {'size':(15,2), 'font':('Franklin Gothic Book', 24),'border_width':1, 'button_color':("black","#66a6ff"),'focus':True}
-layout: list = [
-    [sg.Text('Babylon Upgraded Calculator', size=(49,1), justification='center', background_color="#d1d1d1",text_color='black', font=('Franklin Gothic Book', 14, 'bold'))],
-    [sg.Text('0.0000', size=(18,1),pad=(0,0), justification='right', background_color='#d1d1d1', text_color='black',font=('Franklin Gothic Book',48), relief='sunken', key="_DISPLAY_")],
-    [sg.Button('C',**opr), sg.Button('CE',**opr), sg.Button('β',**opr), sg.Button("/",**opr)],
-    [sg.Button('7',**no), sg.Button('8',**no), sg.Button('9',**no), sg.Button("*",**opr)],
-    [sg.Button('4',**no), sg.Button('5',**no), sg.Button('6',**no), sg.Button("-",**opr)],
-    [sg.Button('1',**no), sg.Button('2',**no), sg.Button('3',**no), sg.Button("+",**opr)],    
-    [sg.Button('0',**no), sg.Button('.',**no), sg.Button('=',**eq, bind_return_key=True)],
-    [sg.Text('Whole number', size=(22,1),pad=(0,0), justification='right', background_color='#d1d1d1', text_color='black',font=('Franklin Gothic Book',36), relief='sunken', key="_DISPLAY1_")],
-    [sg.Text('Fractional part', size=(22,1),pad=(0,0), justification='left', background_color='#d1d1d1', text_color='black',font=('Franklin Gothic Book',36), relief='sunken', key="_DISPLAY2_")]
+no: dict = {'size':(6,2), 'font':('Franklin Gothic Book', 24),'border_width':1, 'button_color':("black","#f9f9f9")}
+opr: dict = {'size':(6,2), 'font':('Franklin Gothic Book', 24),'border_width':1, 'button_color':("black","#d6d6d6")}
+eq: dict = {'size':(12,2), 'font':('Franklin Gothic Book', 24),'border_width':1, 'button_color':("black","#66a6ff")}
+col = [
+    [Button('C',**opr), Button('CE',**opr), Button('β',**opr), Button("/",**opr)],
+    [Button('7',**no), Button('8',**no), Button('9',**no), Button("*",**opr),],
+    [Button('4',**no), Button('5',**no), Button('6',**no), Button("-",**opr)],
+    [Button('1',**no), Button('2',**no), Button('3',**no), Button("+",**opr)],    
+    [Button('0',**no), Button('.',**no), Button('=',**eq)],
+]
+layout:list = [
+    [Text('Babylon Upgraded Calculator', size=(98,1), justification='center', background_color="#d1d1d1",text_color='black', font=('Franklin Gothic Book', 14, 'bold'))],
+    [Text('0.0000', size=(20,1),pad=(0,0), justification='right', background_color='#d1d1d1', text_color='black',font=('Franklin Gothic Book',48), relief='sunken', key="_DISPLAY_")],
+    [Column(col),VerticalSeparator(pad=14),Output(size=(80, 20))],
+    [Text('Whole number', size=(22,1),pad=(0,0), justification='right', background_color='#d1d1d1', text_color='black',font=('Franklin Gothic Book',36), relief='sunken', key="_DISPLAY1_")],
+    [Text('Fractional part', size=(22,1),pad=(0,0), justification='left', background_color='#d1d1d1', text_color='black',font=('Franklin Gothic Book',36), relief='sunken', key="_DISPLAY2_")]
 ]
 
-window: object = sg.Window('Made by Efe', layout=layout,element_padding=(0,0),background_color="#d1d1d1", size=(580, 720), return_keyboard_events=True)
+window: object = Window('Made by Efe', layout=layout,element_padding=(0,0),background_color="#d1d1d1", size=(800, 720), return_keyboard_events=True)
 
 
 var: dict = {'front':[], 'back':[], 'decimal':False, 'x_val':0.0, 'y_val':0.0, 'result':0.0, 'operator':''}
@@ -68,6 +71,7 @@ def calculate_click():
     try:
         var['result'] = eval(str(var['x_val']) + var['operator'] + str(var['y_val']))
         update_display(var['result'])
+        print('   '+str(var['operator'])+'    '+str(var['y_val']))
         clear_click()    
     except:
         update_display("ERROR! DIV/0")
@@ -75,9 +79,11 @@ def calculate_click():
 
 
 def sixtize(event: float):
+    if(event<0):
+        event= event*(-1)
     res=[0,0,0,0,0]
     pec=[0,0,0,0,0,0,0]
-    frac, whole =math.modf(event)
+    frac, whole = modf(event)
     x=4
     while(whole!=0):
         res[x]=int(whole%60)
@@ -86,10 +92,9 @@ def sixtize(event: float):
     window['_DISPLAY1_'].update(value=(res))
     x,b=0,0
     while(frac!=0):
-        a,b=math.modf(frac*60)
+        a,b=modf(frac*60)
         frac=round(a,1)
         pec[x]=int(b)
-        print(x+1,pec[x],"/",frac)
         x=x+1
         if x>6:
             frac=0
@@ -97,7 +102,6 @@ def sixtize(event: float):
     
 while True:
     event, values = window.read()
-    print(event)
     if event is None:
         break
     if event in ['0','1','2','3','4','5','6','7','8','9']:
@@ -108,8 +112,10 @@ while True:
         var['result'] = 0.0
     if event in ['+','-','*','/']:
         operator_click(event)
+        print('     '+str(var['x_val']))
     if event == '=':
         calculate_click()
+        print(' ¯¯¯¯¯¯¯¯¯\n      '+str(var['result'])+'\n')
     if event == '.':
         var['decimal'] = True
     if event == 'β':
